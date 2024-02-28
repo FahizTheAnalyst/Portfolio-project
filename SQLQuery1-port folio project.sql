@@ -104,7 +104,7 @@ select *,(Rollingpeoplevaccinated/population)*100 as vacpercentage
 from POPVSVAC
 
 --POPULATION VS VACCINATION PERCENTAGE USING TEMP TABLES
-
+drop table if exists #Rollingpeoplevaccinated
 CREATE TABLE #Rollingpeoplevaccinated(
 CONTINENT NVARCHAR(255),
 LOCATION NVARCHAR(255),
@@ -127,7 +127,7 @@ from #Rollingpeoplevaccinated
 
 --CREATING VIEW TO STORE DATA FOR LATER VISAUALISATIONS.
 -- CREATING VIEW
-
+--view 1
 CREATE VIEW Rollingpeoplevaccinated AS
 SELECT dea.continent,dea.location,dea.date,dea.population,vac.new_vaccinations, 
 sum(convert(int,vac.new_vaccinations)) over (partition by dea.location order by dea.location,dea.date) as Rollingpeoplevaccinated
@@ -140,3 +140,40 @@ where dea.continent is not null-- and dea.location like 'india'--and vac.new_vac
 
 SELECT*
 FROM Rollingpeoplevaccinated
+
+--view 2
+create view Death_percentage as
+select location,date,total_cases,total_deaths,CAST(total_deaths AS DECIMAL)/ CAST(total_cases AS decimal)*100 AS Death_percentage
+from PortfolioProject..CovidDeaths
+where location like 'INDIA'
+--order by 1,2
+
+SELECT*
+FROM Death_percentage
+
+--view 3
+
+create view affected_percentage as
+select location,population,max(total_cases) as Highest_infection_COUNT,max(CAST(total_cases AS DECIMAL)/ CAST(population AS decimal))*100 AS affected_percentage
+from PortfolioProject..CovidDeaths
+--where location like 'INDIA'
+group by location,population
+
+--order by 4 DESC
+
+select*
+from affected_percentage
+
+--view 4
+
+--Showing countries with most death count per population
+create view Total_death_count as
+select location,max(cast(total_deaths as int)) as Total_death_count
+from PortfolioProject..CovidDeaths
+--where location like 'INDIA'
+where continent is not null
+group by location
+--order by 2 desc
+
+select*
+from Total_death_count
